@@ -1,0 +1,2 @@
+MY_KEY="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"
+HF_KEY="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"

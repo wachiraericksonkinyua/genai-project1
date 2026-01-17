@@ -1,0 +1,115 @@
+Great! Let me break down all the problems and fixes:
+
+Problems Found:
+1. Missing Import in util.py
+Problem: The code tried to use logging.error() but logging wasn't imported, causing NameError: name 'logging' is not defined
+
+Fix: Added import logging to util.py:1-6
+
+2. AI Model Not Following Instructions (mcqgenerator.py)
+Problem: The AI was generating natural language text mixed with questions instead of pure JSON format. The prompt was too vague and didn't clearly specify the output format.
+
+Changes Made:
+
+Before: Generic prompt saying "format your response like RESPONSE_JSON"
+After: Created an explicit template showing the exact JSON structure with proper indentation and placement of all fields, especially emphasizing that "correct" must be outside the "options" dictionary, not inside it
+3. Malformed JSON Structure from AI
+Problem: The AI was placing the "correct" key inside the "options" dictionary instead of at the question level:
+// WRONG (what AI was doing)
+"options": {
+  "a": "...",
+  "b": "...",
+  "c": "...",
+  "d": "...",
+  "correct": "d"  // ❌ WRONG - inside options
+}
+
+// CORRECT (what it should be)
+"options": { "a": "...", "b": "...", "c": "...", "d": "..." },
+"correct": "d"  // ✅ CORRECT - at question level
+Fix: Added fix_malformed_quiz() function in util.py:70-80 that automatically moves misplaced "correct" keys
+
+4. Poor JSON Parsing Logic
+Problem: The regex pattern r'\{.*\}' was too greedy and didn't handle edge cases
+
+Fixes Applied:
+
+Added brace-matching logic instead of regex to find exact JSON boundaries
+Handles markdown code blocks - strips ```json ... ``` if present
+Removes AI markers - strips <|assistant|> tokens
+Tries direct parsing first before attempting extraction
+Filters out "correct" from the options dict when displaying
+5. Poor Error Messages
+Problem: The error "Error in the table data" didn't tell you WHY it failed
+
+Fixes:
+
+Added detailed logging showing exactly what failed
+Added debug output in StreamlitApp.py showing raw AI output
+Specific error messages for JSON decode errors vs other exceptions
+Summary of All Code Changes:
+src/mcgenerator/util.py
+✅ Added import logging
+✅ Rewrote get_table_data() with:
+Brace-matching JSON extraction (not greedy regex)
+Markdown code block removal
+AI marker removal (<|assistant|>)
+Direct JSON parsing attempt first
+Better error logging
+✅ Added fix_malformed_quiz() function to fix misplaced "correct" keys
+src/mcgenerator/mcqgenerator.py
+✅ Updated prompt template to:
+Show explicit JSON structure example
+Clearly state "correct" must be OUTSIDE "options"
+Remove ambiguous instructions
+Add critical rules about proper JSON format
+StreamlitApp.py
+✅ Added logging to show quiz data received
+✅ Added logging for errors
+✅ Improved error message to say "Check logs for details"
+Why It Works Now:
+Better prompt → AI generates more consistent JSON
+Automatic fix for malformed JSON → Even if AI makes mistakes, code fixes them
+Robust JSON parsing → Handles various formats the AI might return
+Detailed logging → Easy to debug if problems occur again
+Filtered display → "correct" doesn't show up as an extra choice even if it's in the wrong place
+The key insight was that the AI model wasn't following your instructions precisely, so we had to both make the prompt clearer AND build defensive code to handle common mistakes the model makes.... ``` `` if present
+
+Removes AI markers - strips <|assistant|> tokens
+Tries direct parsing first before attempting extraction
+Filters out "correct" from the options dict when displaying
+5. Poor Error Messages
+Problem: The error "Error in the table data" didn't tell you WHY it failed
+
+Fixes:
+
+Added detailed logging showing exactly what failed
+Added debug output in StreamlitApp.py showing raw AI output
+Specific error messages for JSON decode errors vs other exceptions
+Summary of All Code Changes:
+src/mcgenerator/util.py
+✅ Added import logging
+✅ Rewrote get_table_data() with:
+Brace-matching JSON extraction (not greedy regex)
+Markdown code block removal
+AI marker removal (<|assistant|>)
+Direct JSON parsing attempt first
+Better error logging
+✅ Added fix_malformed_quiz() function to fix misplaced "correct" keys
+src/mcgenerator/mcqgenerator.py
+✅ Updated prompt template to:
+Show explicit JSON structure example
+Clearly state "correct" must be OUTSIDE "options"
+Remove ambiguous instructions
+Add critical rules about proper JSON format
+StreamlitApp.py
+✅ Added logging to show quiz data received
+✅ Added logging for errors
+✅ Improved error message to say "Check logs for details"
+Why It Works Now:
+Better prompt → AI generates more consistent JSON
+Automatic fix for malformed JSON → Even if AI makes mistakes, code fixes them
+Robust JSON parsing → Handles various formats the AI might return
+Detailed logging → Easy to debug if problems occur again
+Filtered display → "correct" doesn't show up as an extra choice even if it's in the wrong place
+The key insight was that the AI model wasn't following your instructions precisely, so we had to both make the prompt clearer AND build defensive code to handle common mistakes the model makes.

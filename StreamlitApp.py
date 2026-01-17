@@ -61,17 +61,20 @@ with st.form("user_input"):
                     #extract the quiz data from response
                     quiz_data = response.get("quiz", None)
                     if quiz_data is not None:
+                        logging.info(f"Quiz data received: {quiz_data}")
                         st.write("Debug - Raw AI Output:", quiz_data) 
                         table_data = get_table_data(quiz_data)
                         if table_data:#is not None:
                             df=pd.DataFrame(table_data)
                             df.index=df.index+1
+                           
                             st.table(df)
                             #display thr review in a text book as well
                             # Change 'review' to 'reviewed_quiz' to match your chain's output_key
                             st.text_area(label="Review", value=response['reviewed_quiz'])
                         else:
-                            st.error("Error in the table data")
+                            logging.error(f"Failed to parse table data from: {quiz_data}")
+                            st.error("Error in the table data - Check logs for details")
                 else:
                     st.write (response)
 

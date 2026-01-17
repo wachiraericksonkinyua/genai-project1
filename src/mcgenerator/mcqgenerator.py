@@ -34,14 +34,41 @@ chat_model = ChatHuggingFace(llm=llm)
 
 template="""
 Text:{text}
-You are an expert MCQ maker. Given the above text, it is your job to \
-create a quiz  of {number} multiple choice questions for {subject} students in {tone} tone. 
-Make sure the questions are not repeated and check all the questions to be conforming the text as well.
-Make sure to format your response like  RESPONSE_JSON below  and use it as a guide. \
-Ensure to make {number} MCQs
-### RESPONSE_JSON
-{response_json}
+You are an expert MCQ maker. Given the above text, create EXACTLY {number} multiple choice questions for {subject} students in {tone} tone.
 
+CRITICAL: Your response must be ONLY valid JSON in this exact format - nothing else, no explanations, no text before or after:
+
+{{
+  "1": {{
+    "mcq": "question text here",
+    "options": {{
+      "a": "option a text",
+      "b": "option b text", 
+      "c": "option c text",
+      "d": "option d text"
+    }},
+    "correct": "d"
+  }},
+  "2": {{
+    "mcq": "question text here",
+    "options": {{
+      "a": "option a text",
+      "b": "option b text",
+      "c": "option c text", 
+      "d": "option d text"
+    }},
+    "correct": "a"
+  }}
+}}
+
+IMPORTANT RULES:
+1. The "correct" key MUST be OUTSIDE the "options" dictionary, at the same level as "mcq"
+2. "correct" value should be a single letter (a, b, c, or d)
+3. Make sure all questions are from the text material
+4. Generate EXACTLY {number} MCQs
+5. Return ONLY the JSON, NO other text before, after, or mixed in
+
+Generate {number} MCQs now:
 """
 
 quiz_generation_prompt = PromptTemplate(
